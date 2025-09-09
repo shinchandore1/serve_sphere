@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = (credentialResponse: any) => {
+  const login = async (credentialResponse: any) => {
     try {
       const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
       const userData: User = {
@@ -44,6 +44,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
+
+      // Send user data to the backend
+      try {
+        await fetch('http://localhost:5000/api/auth/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            googleId: userData.id,
+            email: userData.email,
+            name: userData.name,
+          }),
+        });
+      } catch (error) {
+        console.error('Error saving user to database:', error);
+      }
+
     } catch (error) {
       console.error('Error decoding JWT:', error);
     }
